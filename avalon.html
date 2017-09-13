@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta content="width=device-width"/>
+	<title>Avalon Web</title>
+	<link href="styles.css" rel="stylesheet">
+	<script src="avalon.js"></script>
+</head>
+<body>
+	<div id="game"class="content">
+		<h1>Avalon Web</h1>
+		<div id="game_image">
+			<img src="Images/main_avalon.jpg" alt="Avalon" height="400" width="300">
+		</div>
+		<div id="game_start">
+			<button id="btn_begin" class="button button_shadowHover">Begin!</button>
+		</div>
+		<div id="game_setup">
+			<p>Select the number of players:</p>
+			<input id="num_players" type="number"/>
+			<p id="error"></p>
+			<p>Enter the names of the players in order, separated by commas:</p>
+			<textarea id="players" rows="10" cols="50"></textarea>
+			<br/><br/>
+			<button id="btn_startGame">Start Game</button>
+		</div>
+		<div id="game_main">
+			<div id="game_message"></div>
+			<button id="btn_one"></button>
+			<button id="btn_two"></button>
+			<button id="btn_next">Next</button>
+		</div>
+		<div id="test">
+		</div>
+	</div>
+</body>
+</html>
