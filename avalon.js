@@ -22,12 +22,12 @@ const characterLists = {
 
 //Number of participants required for each number of players
 const questParticipants = {
-	5:  [2, 3, 2, 3, 3, 0],
-	6:  [2, 3, 4, 3, 4, 0],
-	7:  [2, 3, 3, 4, 4, 0],
-	8:  [3, 4, 4, 5, 5, 0],
-	9:  [3, 4, 4, 5, 5, 0],
-	10: [3, 4, 4, 5, 5, 0],
+	5:  [2, 3, 2, 3, 3],
+	6:  [2, 3, 4, 3, 4],
+	7:  [2, 3, 3, 4, 4],
+	8:  [3, 4, 4, 5, 5],
+	9:  [3, 4, 4, 5, 5],
+	10: [3, 4, 4, 5, 5],
 };
 
 ///Static variables
@@ -49,6 +49,17 @@ let rolePause;
 
 //Index of current mission
 let currMission;
+
+//Number of votes remaining
+let numVotes;
+
+//Number of successes and fails per quest
+let numSuccess;
+let numFail;
+
+//Total sucesses and fails
+let totalSuccesses;
+let totalFails;
 
 //Shuffle a list using the Fisher-Yates algorithm
 function shuffle(inputList) {
@@ -87,6 +98,8 @@ function initializeGame() {
 }
 
 function startGame(){
+	totalSuccesses = 0;
+	totalFails = 0;
 	currPlayer = 0;
 	rolePause = false;
 	
@@ -94,8 +107,8 @@ function startGame(){
 	document.getElementById("game_image").style.display = "none";
 	document.getElementById("game_main").style.display = "block";
 	
-	document.getElementById("btn_one").style.display = "none";
-	document.getElementById("btn_two").style.display = "none";
+	document.getElementById("btn_success").style.display = "none";
+	document.getElementById("btn_fail").style.display = "none";
 	
 	characterLists[numPlayers] = shuffle(characterLists[numPlayers]);
 	
@@ -106,9 +119,16 @@ function startGame(){
 function nextRole(){
 	if (rolePause && currPlayer < numPlayers){
 		document.getElementById("game_message").innerHTML = `<p> Please pass the computer to the next player.</p>`;
+		document.getElementById("game_image").style.display = "none";
 		rolePause = false;
 	}
 	else if (currPlayer < numPlayers){
+		var imgSrc = [];
+		imgSrc.push("Images/char_");
+		imgSrc.push(characterLists[numPlayers][currPlayer]);
+		imgSrc.push(".jpg");
+		document.getElementById("game_image").style.display = "block";
+		document.getElementById("main_image").src = imgSrc.join('');
 		strMessage = [];
 		strMessage.push(playerNames[currPlayer]);
 		strMessage.push(" you are ");
@@ -125,43 +145,124 @@ function nextRole(){
 	}
 }
 
-function startQuestss(){
-	document.getElementById("game_main").style.display = "none";
-	document.getElementById("game_start").style.display = "block";
-	document.getElementById("btn_begin").textContent = "Play Again";
-}
-
 function startQuests(){
 	currMission = 0;
+	
+	document.getElementById("game_image").style.display = "block";
+	document.getElementById("main_image").src = "Images/quest_mission.jpg";
+	document.getElementById("main_image").height = "360";
+	document.getElementById("main_image").width = "640";
+	
 	strMessage = [];
 	strMessage.push(playerNames[Math.floor(numPlayers * Math.random())])
 	strMessage.push(" will choose the first mission.<br>");
 	
-	//while(questParticipants[numPlayers][currMission] != 0){
-		strMessage.push("Welcome to Mission ");
+	document.getElementById("btn_next").removeEventListener("click", nextRole);
+	document.getElementById("btn_next").addEventListener("click", startVoting);
+	
+	runQuest();
+}
+
+function runQuest(){
+	strMessage = [];
+	numSuccess = 0;
+	numFail = 0;
+	numVotes = questParticipants[numPlayers][currMission];
+	
+	if(totalSuccesses == 3){
+		document.getElementById("game_message").innerHTML = "Three Missions Succeeded.<br>Bad players pick who you think Merlin is.";
+		document.getElementById("game_dropdown").style.display = "inline-block";
+		document.getElementById("btn_next").removeEventListener("click", runQuest);
+		document.getElementById("btn_next").addEventListener("click", pickMerlin);
+		
+		populateDropdown();
+	}
+	else if(totalFails == 3){
+		document.getElementById("game_message").innerHTML = "<h2>Congratulations Bad People! You Won!</h2>";
+	}
+	else{
+		strMessage.push("<h2>Welcome to Mission ");
 		strMessage.push(currMission + 1);
-		strMessage.push("!<br>");
+		strMessage.push("!</h2><br>");
 		strMessage.push("Please select ");
 		strMessage.push(questParticipants[numPlayers][currMission]);
 		strMessage.push(" people to go on the quest with you.");
+		
+		document.getElementById("btn_next").removeEventListener("click", runQuest);
+		document.getElementById("btn_next").addEventListener("click", startVoting);
+		document.getElementById("game_message").innerHTML = `<p>${strMessage.join('')}</p>`;
+	}
+}
+
+function startVoting(){
+	document.getElementById("btn_next").style.display = "none";
+	document.getElementById("btn_success").style.display = "inline-block";
+	document.getElementById("btn_fail").style.display = "inline-block";
+	if(numVotes == 0){
+		strMessage = [];
+		strMessage.push("There were ");
+		strMessage.push(numSuccess);
+		strMessage.push(" Successes and ");
+		strMessage.push(numFail);
+		strMessage.push(" Fails.<br>This mission ");
+		if(numFail > 0){
+			strMessage.push("<b>failed</b>.");
+			totalFails++;
+		}
+		else{
+			strMessage.push("<b>succeeded!</b>");
+			totalSuccesses++;
+		}
+		
+		document.getElementById("game_message").innerHTML = `<p>${strMessage.join('')}</p>`;
+		document.getElementById("btn_success").style.display = "none";
+		document.getElementById("btn_fail").style.display = "none";
+		document.getElementById("btn_next").style.display = "inline-block";
+		document.getElementById("btn_next").removeEventListener("click", startVoting);
+		document.getElementById("btn_next").addEventListener("click", runQuest);
 		currMission++;
-	//}
-	document.getElementById("game_message").innerHTML = `<p>${strMessage.join('')}</p>`;
+	}
 }
 
-function clickBtnOne(){
+function clickSuccess(){
+	numSuccess++;
+	numVotes--;
+	document.getElementById("btn_success").blur();
+	startVoting();
 }
 
-function clickBtnTwo(){
+function clickFail(){
+	numFail++;
+	numVotes--;
+	document.getElementById("btn_fail").blur();
+	startVoting();
+}
+
+function pickMerlin(){
+	var players = document.getElementById("dropdown");
+	if(characterLists[numPlayers][players.selectedIndex] == "merlin"){
+		document.getElementById("game_message").innerHTML = "<h2>Congratulations Bad People! You Won!</h2>";
+	}
+	else{
+		document.getElementById("game_message").innerHTML = "<h2>Congratulations Good People! You Won!</h2>";
+	}
+}
+
+function populateDropdown(){
+	var dropdown = document.getElementById('dropdown');
+	for (let i = 0; i < numPlayers; i++){
+		var player = document.createElement('option');
+		player.value = playerNames[i];
+		player.innerHTML = playerNames[i];
+		dropdown.appendChild(player);
+	}
 }
 
 //Event Listeners for Buttons
 document.addEventListener("DOMContentLoaded", function () {
 	document.getElementById("btn_begin").addEventListener("click", beginGame);
 	document.getElementById("btn_startGame").addEventListener("click", initializeGame);
-	document.getElementById("btn_one").addEventListener("click", clickBtnOne);
-	document.getElementById("btn_two").addEventListener("click", clickBtnTwo);
+	document.getElementById("btn_success").addEventListener("click", clickSuccess);
+	document.getElementById("btn_fail").addEventListener("click", clickFail);
 	document.getElementById("btn_next").addEventListener("click", nextRole);
 });
-
-
