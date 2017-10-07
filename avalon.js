@@ -166,8 +166,8 @@ function startQuests(){
 	var imgElement = getElement("main_image");
 	var btnElement = getElement("btn_next");
 	imgElement.src = "Images/quest_mission.jpg";
-	imgElement.height = "360";
-	imgElement.width = "640";
+	imgElement.height = "288";
+	imgElement.width = "512";
 	
 	strMessage = formatString([playerNames[Math.floor(numPlayers * Math.random())], " will choose the first mission.<br>"]);
 	
