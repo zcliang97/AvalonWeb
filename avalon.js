@@ -1,3 +1,5 @@
+///=================================================== CONSTANT VALUES ===================================================
+
 // role_names[role] is the full name of the given role
 const roleNames = {
 	merlin: "Merlin",
@@ -30,7 +32,7 @@ const questParticipants = {
 	10: [3, 4, 4, 5, 5],
 };
 
-///Static variables
+///=================================================== STATIC VARIABLES ===================================================
 
 //All players
 let playerNames;
@@ -61,6 +63,8 @@ let numFail;
 let totalSuccesses;
 let totalFails;
 
+///=================================================== HELPER FUNCTIONS ===================================================
+
 //Shuffle a list using the Fisher-Yates algorithm
 function shuffle(inputList) {
 	const list = JSON.parse(JSON.stringify(inputList));
@@ -73,10 +77,32 @@ function shuffle(inputList) {
 	return list;
 }
 
+//Toggles the visibility of all the elements in the array to the specified display
+function toggleVisibility(arr, display){
+	for(let i = 0; i < arr.length; ++i){
+		document.getElementById(arr[i]).style.display = display;
+	}
+}
+
+//String concat
+function formatString(arr){
+	str = [];
+	for(let i = 0; i < arr.length; ++i){
+		str.push(arr[i]);
+	}
+	return str.join('');
+}
+
+function getElement(id){
+	return document.getElementById(id);
+}
+
+///=================================================== MAIN FUNCTIONS ===================================================
+
 //Begin Game
 function beginGame() {
-	document.getElementById("game_start").style.display = "none";
-	document.getElementById("game_setup").style.display = "block";
+	toggleVisibility(["game_start"], "none");
+	toggleVisibility(["game_setup"], "block");
 	document.getElementById("num_players").value = 5;
 	document.getElementById("players").value = '';
 }
@@ -97,18 +123,15 @@ function initializeGame() {
 	}
 }
 
+//Start game
 function startGame(){
 	totalSuccesses = 0;
 	totalFails = 0;
 	currPlayer = 0;
 	rolePause = false;
 	
-	document.getElementById("game_setup").style.display = "none";
-	document.getElementById("game_image").style.display = "none";
-	document.getElementById("game_main").style.display = "block";
-	
-	document.getElementById("btn_success").style.display = "none";
-	document.getElementById("btn_fail").style.display = "none";
+	toggleVisibility(["game_setup", "game_image", "game_main", "btn_success", "btn_fail"], "none");
+	toggleVisibility(["game_main"], "block");
 	
 	characterLists[numPlayers] = shuffle(characterLists[numPlayers]);
 	
@@ -117,25 +140,17 @@ function startGame(){
 }
 
 function nextRole(){
+	var msgElement = getElement("game_message");
 	if (rolePause && currPlayer < numPlayers){
-		document.getElementById("game_message").innerHTML = `<p> Please pass the computer to the next player.</p>`;
-		document.getElementById("game_image").style.display = "none";
+		msgElement.innerHTML = `<p> Please pass the computer to the next player.</p>`;
+		toggleVisibility(["game_image"], "none");
 		rolePause = false;
 	}
 	else if (currPlayer < numPlayers){
-		var imgSrc = [];
-		imgSrc.push("Images/char_");
-		imgSrc.push(characterLists[numPlayers][currPlayer]);
-		imgSrc.push(".jpg");
-		document.getElementById("game_image").style.display = "block";
-		document.getElementById("main_image").src = imgSrc.join('');
-		strMessage = [];
-		strMessage.push(playerNames[currPlayer]);
-		strMessage.push(" you are ");
-		strMessage.push(roleNames[characterLists[numPlayers][currPlayer]]);
-		strMessage.push(".");
-		
-		document.getElementById("game_message").innerHTML = `<p>${strMessage.join('')}</p>`;
+		toggleVisibility(["game_image"], "block");
+		getElement("main_image").src = formatString(["Images/char_", characterLists[numPlayers][currPlayer], ".jpg"]);
+		strMessage = formatString([playerNames[currPlayer], " you are ", roleNames[characterLists[numPlayers][currPlayer]], "."]);
+		msgElement.innerHTML = `<p>${strMessage}</p>`;
 		
 		currPlayer++;
 		rolePause = true;
@@ -148,78 +163,59 @@ function nextRole(){
 function startQuests(){
 	currMission = 0;
 	
-	document.getElementById("game_image").style.display = "block";
-	document.getElementById("main_image").src = "Images/quest_mission.jpg";
-	document.getElementById("main_image").height = "360";
-	document.getElementById("main_image").width = "640";
+	var imgElement = getElement("main_image");
+	var btnElement = getElement("btn_next");
+	imgElement.src = "Images/quest_mission.jpg";
+	imgElement.height = "360";
+	imgElement.width = "640";
 	
-	strMessage = [];
-	strMessage.push(playerNames[Math.floor(numPlayers * Math.random())])
-	strMessage.push(" will choose the first mission.<br>");
+	strMessage = formatString([playerNames[Math.floor(numPlayers * Math.random())], " will choose the first mission.<br>"]);
 	
-	document.getElementById("btn_next").removeEventListener("click", nextRole);
-	document.getElementById("btn_next").addEventListener("click", startVoting);
+	btnElement.removeEventListener("click", nextRole);
+	btnElement.addEventListener("click", startVoting);
 	
 	runQuest();
 }
 
 function runQuest(){
-	strMessage = [];
+	var btnNext = getElement("btn_next");
+	var msgElement = getElement("game_message");
 	numSuccess = 0;
 	numFail = 0;
 	numVotes = questParticipants[numPlayers][currMission];
 	
 	if(totalSuccesses == 3){
-		document.getElementById("game_message").innerHTML = "Three Missions Succeeded.<br>Bad players pick who you think Merlin is.";
-		document.getElementById("game_dropdown").style.display = "inline-block";
-		document.getElementById("btn_next").removeEventListener("click", runQuest);
-		document.getElementById("btn_next").addEventListener("click", pickMerlin);
+		msgElement.innerHTML = "Three Missions Succeeded.<br>Bad players pick who you think Merlin is.";
+		toggleVisibility(["game_dropdown"], "inline-block");
+		btnNext.removeEventListener("click", runQuest);
+		btnNext.addEventListener("click", pickMerlin);
 		
 		populateDropdown();
 	}
 	else if(totalFails == 3){
-		document.getElementById("game_message").innerHTML = "<h2>Congratulations Bad People! You Won!</h2>";
+		msgElement.innerHTML = "<h2>Congratulations Bad People! You Won!</h2>";
 	}
 	else{
-		strMessage.push("<h2>Welcome to Mission ");
-		strMessage.push(currMission + 1);
-		strMessage.push("!</h2><br>");
-		strMessage.push("Please select ");
-		strMessage.push(questParticipants[numPlayers][currMission]);
-		strMessage.push(" people to go on the quest with you.");
-		
-		document.getElementById("btn_next").removeEventListener("click", runQuest);
-		document.getElementById("btn_next").addEventListener("click", startVoting);
-		document.getElementById("game_message").innerHTML = `<p>${strMessage.join('')}</p>`;
+		strMessage = formatString(["<h2>Welcome to Mission ", currMission + 1, "!</h2><br>", "Please select ", questParticipants[numPlayers][currMission], " people to go on the quest with you."]);
+		btnNext.removeEventListener("click", runQuest);
+		btnNext.addEventListener("click", startVoting);
+		msgElement.innerHTML = `<p>${strMessage}</p>`;
 	}
 }
 
 function startVoting(){
-	document.getElementById("btn_next").style.display = "none";
-	document.getElementById("btn_success").style.display = "inline-block";
-	document.getElementById("btn_fail").style.display = "inline-block";
+	toggleVisibility(["btn_next"], "none");
+	toggleVisibility(["btn_success", "btn_fail"], "inline-block");
 	if(numVotes == 0){
-		strMessage = [];
-		strMessage.push("There were ");
-		strMessage.push(numSuccess);
-		strMessage.push(" Successes and ");
-		strMessage.push(numFail);
-		strMessage.push(" Fails.<br>This mission ");
-		if(numFail > 0){
-			strMessage.push("<b>failed</b>.");
-			totalFails++;
-		}
-		else{
-			strMessage.push("<b>succeeded!</b>");
-			totalSuccesses++;
-		}
+		strMessage = formatString(["There were ", numSuccess, " Successes and ", numFail, " Fails.<br>This mission ", (numFail > 0) ? "<b>failed</b>." : "<b>succeeded!</b>"]);
+		if(numFail > 0) totalFails++;
+		else totalSuccesses++;
 		
-		document.getElementById("game_message").innerHTML = `<p>${strMessage.join('')}</p>`;
-		document.getElementById("btn_success").style.display = "none";
-		document.getElementById("btn_fail").style.display = "none";
-		document.getElementById("btn_next").style.display = "inline-block";
-		document.getElementById("btn_next").removeEventListener("click", startVoting);
-		document.getElementById("btn_next").addEventListener("click", runQuest);
+		getElement("game_message").innerHTML = `<p>${strMessage}</p>`;
+		toggleVisibility(["btn_success", "btn_fail"], "none");
+		toggleVisibility(["btn_next"], "inline-block");
+		getElement("btn_next").removeEventListener("click", startVoting);
+		getElement("btn_next").addEventListener("click", runQuest);
 		currMission++;
 	}
 }
@@ -227,29 +223,30 @@ function startVoting(){
 function clickSuccess(){
 	numSuccess++;
 	numVotes--;
-	document.getElementById("btn_success").blur();
+	getElement("btn_success").blur();
 	startVoting();
 }
 
 function clickFail(){
 	numFail++;
 	numVotes--;
-	document.getElementById("btn_fail").blur();
+	getElement("btn_fail").blur();
 	startVoting();
 }
 
 function pickMerlin(){
-	var players = document.getElementById("dropdown");
+	var players = getElement("dropdown");
+	var msgElement = getElement("game_message");
 	if(characterLists[numPlayers][players.selectedIndex] == "merlin"){
-		document.getElementById("game_message").innerHTML = "<h2>Congratulations Bad People! You Won!</h2>";
+		msgElement.innerHTML = "<h2>Congratulations Bad People! You Won!</h2>";
 	}
 	else{
-		document.getElementById("game_message").innerHTML = "<h2>Congratulations Good People! You Won!</h2>";
+		msgElement.innerHTML = "<h2>Congratulations Good People! You Won!</h2>";
 	}
 }
 
 function populateDropdown(){
-	var dropdown = document.getElementById('dropdown');
+	var dropdown = getElement('dropdown');
 	for (let i = 0; i < numPlayers; i++){
 		var player = document.createElement('option');
 		player.value = playerNames[i];
@@ -260,9 +257,9 @@ function populateDropdown(){
 
 //Event Listeners for Buttons
 document.addEventListener("DOMContentLoaded", function () {
-	document.getElementById("btn_begin").addEventListener("click", beginGame);
-	document.getElementById("btn_startGame").addEventListener("click", initializeGame);
-	document.getElementById("btn_success").addEventListener("click", clickSuccess);
-	document.getElementById("btn_fail").addEventListener("click", clickFail);
-	document.getElementById("btn_next").addEventListener("click", nextRole);
+	getElement("btn_begin").addEventListener("click", beginGame);
+	getElement("btn_startGame").addEventListener("click", initializeGame);
+	getElement("btn_success").addEventListener("click", clickSuccess);
+	getElement("btn_fail").addEventListener("click", clickFail);
+	getElement("btn_next").addEventListener("click", nextRole);
 });
